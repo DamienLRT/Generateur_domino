@@ -1,21 +1,36 @@
-# Générateur de dominos
+# Streamlit - Outils ludiques : Dominos & « J’ai… qui a ? »
 
-Cette application Streamlit permet de générer des dominos à partir d'images importées.
+Cette application Streamlit permet de générer facilement :
 
-Fonctionnalités :
-- Fond blanc garanti même pour les PNG transparents
-- Chaque image a une correspondance unique
-- Aperçu des dominos dans l'application
-- Téléchargement de tous les dominos dans un seul PDF
+1. Des **dominos personnalisés** à partir d’images avec fond blanc, et de les télécharger en PDF.
+2. Un **jeu « J’ai… qui a ? »** à partir d’images, avec génération automatique des cartes en PDF.
+
+L’application est organisée en **deux onglets** pour naviguer facilement entre les deux fonctionnalités.
+
+---
+
+## Fonctionnalités
+
+### 1. Dominos
+- Importer **au moins 2 images** (PNG, JPG, JPEG).
+- Génération automatique des dominos :
+  - Chaque domino est divisé en deux parties avec une ligne de séparation.
+  - Fond blanc pour une impression propre.
+- Télécharger **tous les dominos en PDF**.
+- Aperçu des dominos générés directement dans l’application.
+
+### 2. « J’ai… qui a ? »
+- Importer **une ou plusieurs images** (PNG, JPG, JPEG).  
+  L’ordre des images définit l’ordre du jeu.
+- Génération automatique des cartes :
+  - La première carte indique « J’ai la première carte ! » et « Qui a ? ».
+  - Les cartes intermédiaires affichent « J’ai » et « Qui a ? » avec les images correspondantes.
+  - La dernière carte indique « … c’est la dernière carte ! ».
+- Télécharger **le jeu complet en PDF** prêt à imprimer.
+
+---
 
 ## Installation
 
-1. Cloner le dépôt
-2. Installer les dépendances :
-
-## Utilisation
-
-Importer un ensemble d'images (formats supportés : PNG, JPG, JPEG)
-L'application génère automatiquement les paires de dominos
-Visualiser l'aperçu des dominos dans l'interface
-Télécharger le fichier PDF contenant tous les dominos
+1. Cloner le dépôt ou télécharger le fichier `app.py`.
+2. Installer les dépendances Python nécessaires :
