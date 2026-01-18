@@ -12,3 +12,10 @@ Fonctionnalités :
 
 1. Cloner le dépôt
 2. Installer les dépendances :
+
+## Utilisation
+
+Importer un ensemble d'images (formats supportés : PNG, JPG, JPEG)
+L'application génère automatiquement les paires de dominos
+Visualiser l'aperçu des dominos dans l'interface
+Télécharger le fichier PDF contenant tous les dominos
