@@ -42,12 +42,15 @@ def create_domino(img1, img2, size=(300, 600)):
 
 if uploaded_files and len(uploaded_files) >= 2:
     images = [Image.open(f).convert("RGBA") for f in uploaded_files]
-    images = images * 2
     random.shuffle(images)
 
     dominos = []
-    for _ in range(len(images)//2):
-        dominos.append((images.pop(), images.pop()))
+    n = len(images)
+
+    for i in range(n):
+        img1 = images[i]
+        img2 = images[(i + 1) % n]  # boucle circulaire
+        dominos.append((img1, img2))
 
     # PDF
     pdf_buffer = io.BytesIO()
