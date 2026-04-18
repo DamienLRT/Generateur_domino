@@ -13,7 +13,33 @@ from reportlab.lib.units import cm
 st.set_page_config(page_title="Outils ludiques - Dominos et J'ai...", layout="centered")
 
 # Onglets
-tab1, tab2 = st.tabs(["🎲 Dominos", "🃏 J’ai… qui a ?"])
+tab0, tab1, tab2 = st.tabs(["A propos","🎲 Dominos", "🃏 J’ai… qui a ?"])
+
+# =========================
+# Onglet 3 : À propos
+# =========================
+with tab0:
+    st.header("ℹ️ À propos du projet")
+
+    st.markdown("""
+Ce projet est né d’un besoin personnel.
+
+👉 Il a été conçu pour ma fiancée, institutrice en maternelle,  
+afin de lui permettre de créer facilement des supports ludiques et pédagogiques utilisés dans l'apprentissage du lexique.
+
+🎯 Objectif :
+- Faciliter l’apprentissage du lexique chez les jeunes enfants  
+- Transformer des images en jeux éducatifs (dominos, “J’ai… qui a ?”)  
+- Gagner du temps dans la création de ressources personnalisées  
+
+🧠 L’idée est de rendre la création d’outils pédagogiques :
+- simple  
+- rapide  
+- et entièrement personnalisable  
+
+✨ Ce projet continue d’évoluer au fil des besoins de la classe et des retours terrain.
+""")
+
 
 # =========================
 # Onglet 1 : Dominos
