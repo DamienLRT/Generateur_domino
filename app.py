@@ -375,18 +375,17 @@ with tab1:
         # BORDURE
         # -----------------------------------------------------
 
-        draw.rectangle(
-            (
-                0,
-                0,
-                image_width - 1,
-                size[1] - 1
-            ),
-            outline="black",
-            width=4
-        )
-
-        return domino
+draw.rounded_rectangle(
+    (
+        2,
+        2,
+        image_width - 3,
+        size[1] - 3
+    ),
+    radius=25,
+    outline="black",
+    width=4
+)
 
 
     # =========================================================
