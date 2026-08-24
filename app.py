@@ -347,7 +347,7 @@ with tab1:
         )
 
 
-        # -----------------------------------------------------
+# -----------------------------------------------------
         # LIGNE CENTRALE EN PETITS POINTS
         # -----------------------------------------------------
 
@@ -372,20 +372,23 @@ with tab1:
 
 
         # -----------------------------------------------------
-        # BORDURE
+        # BORDURE AVEC ANGLES ARRONDIS
         # -----------------------------------------------------
 
-draw.rounded_rectangle(
-    (
-        2,
-        2,
-        image_width - 3,
-        size[1] - 3
-    ),
-    radius=25,
-    outline="black",
-    width=4
-)
+        draw.rounded_rectangle(
+            (
+                2,
+                2,
+                image_width - 3,
+                size[1] - 3
+            ),
+            radius=25,
+            outline="black",
+            width=4
+        )
+
+        return domino
+
 
 
     # =========================================================
