@@ -40,28 +40,28 @@ tab0, tab1, tab2 = st.tabs([
 
 pastel_colors = {
 
-    "🤍 Blanc":
+    "Blanc":
         (255, 255, 255),
 
-    "🌸 Rose pastel":
+    "Rose pastel":
         (255, 225, 235),
 
-    "🩵 Bleu pastel":
+    "Bleu pastel":
         (220, 240, 255),
 
-    "🌿 Vert pastel":
+    "Vert pastel":
         (225, 245, 225),
 
-    "🍋 Jaune pastel":
+    "Jaune pastel":
         (255, 248, 210),
 
-    "🍑 Pêche pastel":
+    "Pêche pastel":
         (255, 230, 215),
 
-    "💜 Lavande":
+    "Lavande":
         (235, 225, 250),
 
-    "🩷 Rose poudré":
+    "Rose poudré":
         (245, 220, 225),
 }
 
