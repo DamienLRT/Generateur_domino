@@ -129,10 +129,7 @@ with tab1:
 
                 st.stop()
 
-            return ImageFont.truetype(
-                borel_path,
-                30
-            )
+            return ImageFont.truetype(borel_path)
 
         # -----------------------------------------------------
         # POLICE PAR DÉFAUT
@@ -143,18 +140,15 @@ with tab1:
 
         if os.path.exists(arial_path):
 
-            return ImageFont.truetype(
-                arial_path,
-                30
-            )
+            return ImageFont.truetype(arial_path)
 
         # Fallback pour Streamlit Cloud / Linux
         # DejaVu Sans est généralement disponible.
         try:
 
             return ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                30
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+                
             )
 
         except:
