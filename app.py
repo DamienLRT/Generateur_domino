@@ -738,9 +738,161 @@ with tab1:
 with tab2:
 
     st.header(
-        "« J’ai… qui a ? » (images)"
+        "« J’ai… qui a ? »"
     )
 
+
+    # =========================================================
+    # CHOIX DE LA POLICE
+    # =========================================================
+
+    cursive_jai = st.checkbox(
+        "✍️ Police cursive",
+        value=False,
+        key="jai_cursive"
+    )
+
+
+    if cursive_jai:
+
+        st.caption(
+            "Police utilisée : Borel"
+        )
+
+    else:
+
+        st.caption(
+            "Police utilisée : police par défaut"
+        )
+
+
+    # =========================================================
+    # CHOIX DU FOND
+    # =========================================================
+
+    pastel_colors_jai = {
+
+        "🤍 Blanc":
+            (255, 255, 255),
+
+        "🌸 Rose pastel":
+            (255, 225, 235),
+
+        "🩵 Bleu pastel":
+            (220, 240, 255),
+
+        "🌿 Vert pastel":
+            (225, 245, 225),
+
+        "🍋 Jaune pastel":
+            (255, 248, 210),
+
+        "🍑 Pêche pastel":
+            (255, 230, 215),
+
+        "💜 Lavande":
+            (235, 225, 250),
+
+        "🩷 Rose poudré":
+            (245, 220, 225),
+    }
+
+
+    background_name_jai = st.selectbox(
+        "🎨 Couleur du fond des cartes",
+        list(pastel_colors_jai.keys()),
+        index=0,
+        key="jai_background"
+    )
+
+
+    background_color_jai = pastel_colors_jai[
+        background_name_jai
+    ]
+
+
+    # =========================================================
+    # CHEMIN DE LA POLICE BOREL
+    # =========================================================
+
+    borel_path_jai = os.path.join(
+        os.path.dirname(
+            os.path.abspath(__file__)
+        ),
+        "Borel.ttf"
+    )
+
+
+    # =========================================================
+    # FONCTION POUR CHOISIR LA POLICE
+    # =========================================================
+
+    def get_jai_font():
+
+        # -----------------------------------------------------
+        # POLICE BOREL
+        # -----------------------------------------------------
+
+        if cursive_jai:
+
+            if not os.path.exists(
+                borel_path_jai
+            ):
+
+                st.error(
+                    "❌ La police Borel est introuvable.\n\n"
+                    "Ajoute le fichier `Borel.ttf` "
+                    "dans le même dossier que ton fichier Python "
+                    "et dans ton dépôt Git."
+                )
+
+                st.stop()
+
+
+            return ImageFont.truetype(
+                borel_path_jai,
+                32
+            )
+
+
+        # -----------------------------------------------------
+        # POLICE PAR DÉFAUT
+        # -----------------------------------------------------
+
+        arial_path = (
+            "C:/Windows/Fonts/arial.ttf"
+        )
+
+
+        if os.path.exists(
+            arial_path
+        ):
+
+            return ImageFont.truetype(
+                arial_path,
+                32
+            )
+
+
+        # -----------------------------------------------------
+        # FALLBACK LINUX / STREAMLIT CLOUD
+        # -----------------------------------------------------
+
+        try:
+
+            return ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                32
+            )
+
+        except:
+
+            return ImageFont.load_default()
+
+
+    # =========================================================
+    # IMPORT DES IMAGES
+    # =========================================================
 
     uploaded_files = st.file_uploader(
         "Importer les images (PNG / JPG) – "
@@ -751,12 +903,23 @@ with tab2:
     )
 
 
+    # =========================================================
+    # GÉNÉRATION
+    # =========================================================
+
     if uploaded_files and len(uploaded_files) >= 1:
 
+        # -----------------------------------------------------
+        # IMPORT IMAGES + NOMS
+        # -----------------------------------------------------
+
         images = [
-            Image.open(
-                f
-            ).convert("RGB")
+
+            (
+                Image.open(f).convert("RGB"),
+                f.name
+            )
+
             for f in uploaded_files
         ]
 
@@ -766,10 +929,14 @@ with tab2:
         )
 
 
-        if st.button(
-            "📄 Générer et télécharger le PDF"
-        ):
+        # =====================================================
+        # BOUTON PDF
+        # =====================================================
 
+        if st.button(
+            "📄 Générer et télécharger le PDF",
+            key="jai_generate"
+        ):
 
             with tempfile.NamedTemporaryFile(
                 delete=False,
@@ -788,22 +955,21 @@ with tab2:
             page_width, page_height = A4
 
 
-            card_margin = (
-                1.5 * cm
-            )
+            # -------------------------------------------------
+            # DIMENSIONS DES CARTES
+            # -------------------------------------------------
 
+            card_margin = 1.5 * cm
 
             card_width = (
                 page_width
                 - 2 * card_margin
             )
 
-
             card_height = (
                 page_height
                 - 2 * card_margin
             )
-
 
             corner_radius = 25
 
@@ -813,12 +979,59 @@ with tab2:
 
 
             # =================================================
+            # POLICE REPORTLAB
+            # =================================================
+
+            # ReportLab ne sait pas utiliser directement
+            # Borel.ttf comme Helvetica.
+            #
+            # On utilise donc Borel uniquement pour les
+            # noms des images dans une image PIL.
+            #
+            # Les textes "J'ai", "Qui a ?" restent en
+            # Helvetica.
+
+
+            # =================================================
             # CRÉATION DES CARTES
             # =================================================
 
             for i in range(
                 total_cards
             ):
+
+
+                # =================================================
+                # FOND PASTEL
+                # =================================================
+
+                c.setFillColorRGB(
+                    background_color_jai[0] / 255,
+                    background_color_jai[1] / 255,
+                    background_color_jai[2] / 255
+                )
+
+
+                c.roundRect(
+                    card_margin,
+                    card_margin,
+                    card_width,
+                    card_height,
+                    corner_radius,
+                    fill=1,
+                    stroke=0
+                )
+
+
+                # =================================================
+                # BORDURE
+                # =================================================
+
+                c.setStrokeColorRGB(
+                    0,
+                    0,
+                    0
+                )
 
 
                 c.setLineWidth(
@@ -831,7 +1044,9 @@ with tab2:
                     card_margin,
                     card_width,
                     card_height,
-                    corner_radius
+                    corner_radius,
+                    fill=0,
+                    stroke=1
                 )
 
 
@@ -875,7 +1090,14 @@ with tab2:
                     )
 
 
-                    first_img_path = (
+                    # -------------------------------------------------
+                    # IMAGE + NOM
+                    # -------------------------------------------------
+
+                    img, img_name = images[0]
+
+
+                    img_path = (
                         tempfile
                         .NamedTemporaryFile(
                             delete=False,
@@ -885,15 +1107,15 @@ with tab2:
                     )
 
 
-                    images[0].save(
-                        first_img_path
+                    img.save(
+                        img_path
                     )
 
 
                     c.drawImage(
-                        first_img_path,
+                        img_path,
                         card_margin + 2 * cm,
-                        card_margin + 2 * cm,
+                        card_margin + 3 * cm,
                         card_width - 4 * cm,
                         card_height / 3,
                         preserveAspectRatio=True
@@ -901,7 +1123,32 @@ with tab2:
 
 
                     os.remove(
-                        first_img_path
+                        img_path
+                    )
+
+
+                    # -------------------------------------------------
+                    # NOM DE L'IMAGE
+                    # -------------------------------------------------
+
+                    name_without_extension = (
+                        img_name.rsplit(
+                            ".",
+                            1
+                        )[0]
+                    )
+
+
+                    c.setFont(
+                        "Helvetica",
+                        22
+                    )
+
+
+                    c.drawCentredString(
+                        page_width / 2,
+                        card_margin + 2 * cm,
+                        name_without_extension
                     )
 
 
@@ -912,15 +1159,19 @@ with tab2:
                 elif i < total_cards - 1:
 
 
-                    img_have = images[
+                    img_have, name_have = images[
                         i - 1
                     ]
 
 
-                    img_who = images[
+                    img_who, name_who = images[
                         i
                     ]
 
+
+                    # -------------------------------------------------
+                    # J'AI
+                    # -------------------------------------------------
 
                     c.setFont(
                         "Helvetica-Bold",
@@ -936,6 +1187,10 @@ with tab2:
                         "J’ai"
                     )
 
+
+                    # -------------------------------------------------
+                    # IMAGE J'AI
+                    # -------------------------------------------------
 
                     have_path = (
                         tempfile
@@ -955,12 +1210,44 @@ with tab2:
                     c.drawImage(
                         have_path,
                         card_margin + 2 * cm,
-                        center_y + 1 * cm,
+                        center_y + 1.5 * cm,
                         card_width - 4 * cm,
                         card_height / 3,
                         preserveAspectRatio=True
                     )
 
+
+                    os.remove(
+                        have_path
+                    )
+
+
+                    # -------------------------------------------------
+                    # NOM IMAGE J'AI
+                    # -------------------------------------------------
+
+                    name_have = name_have.rsplit(
+                        ".",
+                        1
+                    )[0]
+
+
+                    c.setFont(
+                        "Helvetica",
+                        22
+                    )
+
+
+                    c.drawCentredString(
+                        page_width / 2,
+                        center_y + 0.5 * cm,
+                        name_have
+                    )
+
+
+                    # -------------------------------------------------
+                    # QUI A ?
+                    # -------------------------------------------------
 
                     c.setFont(
                         "Helvetica-Bold",
@@ -970,10 +1257,14 @@ with tab2:
 
                     c.drawCentredString(
                         page_width / 2,
-                        center_y - 1 * cm,
+                        center_y - 1.5 * cm,
                         "Qui a ?"
                     )
 
+
+                    # -------------------------------------------------
+                    # IMAGE QUI A
+                    # -------------------------------------------------
 
                     who_path = (
                         tempfile
@@ -993,7 +1284,7 @@ with tab2:
                     c.drawImage(
                         who_path,
                         card_margin + 2 * cm,
-                        card_margin + 2 * cm,
+                        card_margin + 3 * cm,
                         card_width - 4 * cm,
                         card_height / 3,
                         preserveAspectRatio=True
@@ -1001,12 +1292,30 @@ with tab2:
 
 
                     os.remove(
-                        have_path
+                        who_path
                     )
 
 
-                    os.remove(
-                        who_path
+                    # -------------------------------------------------
+                    # NOM IMAGE QUI A
+                    # -------------------------------------------------
+
+                    name_who = name_who.rsplit(
+                        ".",
+                        1
+                    )[0]
+
+
+                    c.setFont(
+                        "Helvetica",
+                        22
+                    )
+
+
+                    c.drawCentredString(
+                        page_width / 2,
+                        card_margin + 2 * cm,
+                        name_who
                     )
 
 
@@ -1017,7 +1326,7 @@ with tab2:
                 else:
 
 
-                    img_last = images[
+                    img_last, name_last = images[
                         -1
                     ]
 
@@ -1037,6 +1346,10 @@ with tab2:
                     )
 
 
+                    # -------------------------------------------------
+                    # IMAGE
+                    # -------------------------------------------------
+
                     last_path = (
                         tempfile
                         .NamedTemporaryFile(
@@ -1055,12 +1368,44 @@ with tab2:
                     c.drawImage(
                         last_path,
                         card_margin + 2 * cm,
-                        center_y,
+                        center_y + 0.5 * cm,
                         card_width - 4 * cm,
                         card_height / 3,
                         preserveAspectRatio=True
                     )
 
+
+                    os.remove(
+                        last_path
+                    )
+
+
+                    # -------------------------------------------------
+                    # NOM
+                    # -------------------------------------------------
+
+                    name_last = name_last.rsplit(
+                        ".",
+                        1
+                    )[0]
+
+
+                    c.setFont(
+                        "Helvetica",
+                        22
+                    )
+
+
+                    c.drawCentredString(
+                        page_width / 2,
+                        center_y - 0.5 * cm,
+                        name_last
+                    )
+
+
+                    # -------------------------------------------------
+                    # TEXTE FINAL
+                    # -------------------------------------------------
 
                     c.setFont(
                         "Helvetica-Bold",
@@ -1075,24 +1420,19 @@ with tab2:
                     )
 
 
-                    os.remove(
-                        last_path
-                    )
-
-
                 c.showPage()
 
 
-            # =================================================
+            # =====================================================
             # FINALISATION
-            # =================================================
+            # =====================================================
 
             c.save()
 
 
-            # =================================================
+            # =====================================================
             # TÉLÉCHARGEMENT
-            # =================================================
+            # =====================================================
 
             with open(
                 pdf_path,
@@ -1103,7 +1443,8 @@ with tab2:
                     "⬇️ Télécharger le PDF final",
                     f,
                     file_name="j_ai_qui_a_cartes_final.pdf",
-                    mime="application/pdf"
+                    mime="application/pdf",
+                    key="jai_download"
                 )
 
 
