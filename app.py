@@ -351,17 +351,22 @@ with tab1:
         # LIGNE CENTRALE
         # -----------------------------------------------------
 
-        draw.line(
-            (
-                0,
-                second_y,
-                image_width,
-                second_y
-            ),
-            fill="black",
-            width=4
-        )
+dot_radius = 2.5
+gap = 14
 
+x = 8
+
+while x < image_width - 8:
+
+    draw.ellipse(
+        (
+            x - dot_radius,
+            second_y - dot_radius,
+            x + dot_radius,
+            second_y + dot_radius
+        ),
+        fill="black"
+    )
 
         # -----------------------------------------------------
         # BORDURE
