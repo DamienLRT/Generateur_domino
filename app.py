@@ -2,12 +2,15 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import random
+import tempfile
+import os
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
-import tempfile
-import os
 from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 # =============================================================
@@ -32,12 +35,158 @@ tab0, tab1, tab2 = st.tabs([
 
 
 # =============================================================
+# COULEURS PASTEL
+# =============================================================
+
+pastel_colors = {
+
+    "🤍 Blanc":
+        (255, 255, 255),
+
+    "🌸 Rose pastel":
+        (255, 225, 235),
+
+    "🩵 Bleu pastel":
+        (220, 240, 255),
+
+    "🌿 Vert pastel":
+        (225, 245, 225),
+
+    "🍋 Jaune pastel":
+        (255, 248, 210),
+
+    "🍑 Pêche pastel":
+        (255, 230, 215),
+
+    "💜 Lavande":
+        (235, 225, 250),
+
+    "🩷 Rose poudré":
+        (245, 220, 225),
+}
+
+
+# =============================================================
+# CHEMIN DE LA POLICE BOREL
+# =============================================================
+
+borel_path = os.path.join(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    ),
+    "Borel.ttf"
+)
+
+
+# =============================================================
+# FONCTION : POLICE POUR PIL
+# =============================================================
+
+def get_pil_font(cursive):
+
+    if cursive:
+
+        if not os.path.exists(
+            borel_path
+        ):
+
+            st.error(
+                "❌ La police Borel est introuvable.\n\n"
+                "Ajoute le fichier Borel.ttf "
+                "dans le même dossier que app.py."
+            )
+
+            st.stop()
+
+        return ImageFont.truetype(
+            borel_path,
+            32
+        )
+
+
+    # ---------------------------------------------------------
+    # POLICE NORMALE
+    # ---------------------------------------------------------
+
+    arial_path = (
+        "C:/Windows/Fonts/arial.ttf"
+    )
+
+
+    if os.path.exists(
+        arial_path
+    ):
+
+        return ImageFont.truetype(
+            arial_path,
+            32
+        )
+
+
+    # ---------------------------------------------------------
+    # FALLBACK LINUX / STREAMLIT CLOUD
+    # ---------------------------------------------------------
+
+    try:
+
+        return ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            32
+        )
+
+    except:
+
+        return ImageFont.load_default()
+
+
+# =============================================================
+# FONCTION : POLICE POUR REPORTLAB
+# =============================================================
+
+def get_reportlab_font(cursive):
+
+    if cursive:
+
+        if not os.path.exists(
+            borel_path
+        ):
+
+            st.error(
+                "❌ La police Borel.ttf est introuvable."
+            )
+
+            st.stop()
+
+
+        try:
+
+            pdfmetrics.registerFont(
+                TTFont(
+                    "Borel",
+                    borel_path
+                )
+            )
+
+        except:
+
+            pass
+
+
+        return "Borel"
+
+
+    return "Helvetica"
+
+
+# =============================================================
 # ONGLET 0 : À PROPOS
 # =============================================================
 
 with tab0:
 
-    st.header("ℹ️ À propos du projet")
+    st.header(
+        "ℹ️ À propos du projet"
+    )
 
     st.markdown("""
 Ce projet est né d’un besoin personnel.
@@ -46,11 +195,13 @@ Ce projet est né d’un besoin personnel.
 afin de lui permettre de créer facilement des supports ludiques et pédagogiques utilisés dans l'apprentissage du lexique.
 
 🎯 Objectif :
+
 - Faciliter l’apprentissage du lexique chez les jeunes enfants
-- Transformer des images en jeux éducatifs (dominos, “J’ai… qui a ?”)
+- Transformer des images en jeux éducatifs
 - Gagner du temps dans la création de ressources personnalisées
 
 🧠 L’idée est de rendre la création d’outils pédagogiques :
+
 - simple
 - rapide
 - et entièrement personnalisable
@@ -77,23 +228,27 @@ with tab1:
     uploaded_files = st.file_uploader(
         "Importe tes images",
         accept_multiple_files=True,
-        type=["png", "jpg", "jpeg"],
+        type=[
+            "png",
+            "jpg",
+            "jpeg"
+        ],
         key="domino_files"
     )
 
 
     # =========================================================
-    # CHOIX DE LA POLICE
+    # POLICE
     # =========================================================
 
-    cursive = st.checkbox(
+    cursive_domino = st.checkbox(
         "✍️ Police cursive",
         value=False,
         key="domino_cursive"
     )
 
 
-    if cursive:
+    if cursive_domino:
 
         st.caption(
             "Police utilisée : Borel"
@@ -107,38 +262,10 @@ with tab1:
 
 
     # =========================================================
-    # CHOIX DU FOND PASTEL
+    # FOND
     # =========================================================
 
-    pastel_colors = {
-
-        "🤍 Blanc":
-            (255, 255, 255),
-
-        "🌸 Rose pastel":
-            (255, 225, 235),
-
-        "🩵 Bleu pastel":
-            (220, 240, 255),
-
-        "🌿 Vert pastel":
-            (225, 245, 225),
-
-        "🍋 Jaune pastel":
-            (255, 248, 210),
-
-        "🍑 Pêche pastel":
-            (255, 230, 215),
-
-        "💜 Lavande":
-            (235, 225, 250),
-
-        "🩷 Rose poudré":
-            (245, 220, 225),
-    }
-
-
-    background_name = st.selectbox(
+    background_name_domino = st.selectbox(
         "🎨 Couleur du fond des dominos",
         list(pastel_colors.keys()),
         index=0,
@@ -146,90 +273,15 @@ with tab1:
     )
 
 
-    background_color = pastel_colors[
-        background_name
-    ]
-
-
-    # =========================================================
-    # CHEMIN DE LA POLICE BOREL
-    # =========================================================
-
-    borel_path = os.path.join(
-        os.path.dirname(
-            os.path.abspath(__file__)
-        ),
-        "Borel.ttf"
+    background_color_domino = (
+        pastel_colors[
+            background_name_domino
+        ]
     )
 
 
     # =========================================================
-    # FONCTION POUR CHOISIR LA POLICE
-    # =========================================================
-
-    def get_domino_font():
-
-        # -----------------------------------------------------
-        # POLICE BOREL
-        # -----------------------------------------------------
-
-        if cursive:
-
-            if not os.path.exists(
-                borel_path
-            ):
-
-                st.error(
-                    "❌ La police Borel est introuvable.\n\n"
-                    "Ajoute le fichier `Borel.ttf` "
-                    "dans le même dossier que ton fichier Python "
-                    "et dans ton dépôt Git."
-                )
-
-                st.stop()
-
-
-            return ImageFont.truetype(
-                borel_path
-            )
-
-
-        # -----------------------------------------------------
-        # POLICE PAR DÉFAUT
-        # -----------------------------------------------------
-
-        # Windows
-        arial_path = (
-            "C:/Windows/Fonts/arial.ttf"
-        )
-
-
-        if os.path.exists(
-            arial_path
-        ):
-
-            return ImageFont.truetype(
-                arial_path
-            )
-
-
-        # -----------------------------------------------------
-        # FALLBACK STREAMLIT CLOUD / LINUX
-        # -----------------------------------------------------
-
-        try:
-
-            return ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-            )
-
-        except:
-
-            return ImageFont.load_default()
-
-
-    # =========================================================
-    # CRÉATION D'UN DOMINO
+    # CRÉATION DOMINO
     # =========================================================
 
     def create_domino(
@@ -238,25 +290,9 @@ with tab1:
         name1,
         name2,
         background_color,
+        cursive,
         size=(400, 700)
     ):
-
-        """
-        Crée un domino avec :
-
-        - image 1
-        - nom de l'image 1
-        - image 2
-        - nom de l'image 2
-        - fond pastel
-        - séparation en pointillés
-        - bordure arrondie
-        """
-
-
-        # -----------------------------------------------------
-        # DIMENSIONS
-        # -----------------------------------------------------
 
         image_width = size[0]
 
@@ -285,11 +321,13 @@ with tab1:
         # POLICE
         # -----------------------------------------------------
 
-        font = get_domino_font()
+        font = get_pil_font(
+            cursive
+        )
 
 
         # =====================================================
-        # FONCTION POUR PLACER UNE IMAGE
+        # PLACER IMAGE
         # =====================================================
 
         def paste_with_background(
@@ -301,15 +339,10 @@ with tab1:
 
             img = img.copy()
 
-
-            # Conserver les proportions
-
             img.thumbnail(
                 img_size
             )
 
-
-            # Centrer l'image
 
             x = (
                 position[0]
@@ -330,11 +363,14 @@ with tab1:
 
 
             # -------------------------------------------------
-            # GESTION DE LA TRANSPARENCE
+            # TRANSPARENCE
             # -------------------------------------------------
 
             if (
-                img.mode in ("RGBA", "LA")
+                img.mode in (
+                    "RGBA",
+                    "LA"
+                )
                 or (
                     img.mode == "P"
                     and "transparency"
@@ -349,12 +385,12 @@ with tab1:
                 )
 
 
-                # Fond de l'image = couleur du domino
-
                 bg = Image.new(
                     "RGBA",
                     img.size,
-                    background_color + (255,)
+                    background_color + (
+                        255,
+                    )
                 )
 
 
@@ -365,7 +401,9 @@ with tab1:
 
 
                 base.paste(
-                    bg.convert("RGB"),
+                    bg.convert(
+                        "RGB"
+                    ),
                     (x, y)
                 )
 
@@ -373,13 +411,15 @@ with tab1:
             else:
 
                 base.paste(
-                    img.convert("RGB"),
+                    img.convert(
+                        "RGB"
+                    ),
                     (x, y)
                 )
 
 
         # =====================================================
-        # NETTOYAGE DES NOMS
+        # NOMS
         # =====================================================
 
         name1 = name1.rsplit(
@@ -395,7 +435,7 @@ with tab1:
 
 
         # =====================================================
-        # PREMIÈRE IMAGE
+        # IMAGE 1
         # =====================================================
 
         paste_with_background(
@@ -410,7 +450,7 @@ with tab1:
 
 
         # =====================================================
-        # NOM PREMIÈRE IMAGE
+        # NOM 1
         # =====================================================
 
         draw.text(
@@ -427,7 +467,7 @@ with tab1:
 
 
         # =====================================================
-        # DEUXIÈME IMAGE
+        # IMAGE 2
         # =====================================================
 
         second_y = (
@@ -448,7 +488,7 @@ with tab1:
 
 
         # =====================================================
-        # NOM DEUXIÈME IMAGE
+        # NOM 2
         # =====================================================
 
         draw.text(
@@ -466,7 +506,7 @@ with tab1:
 
 
         # =====================================================
-        # LIGNE CENTRALE EN PETITS POINTS
+        # PETITS POINTS
         # =====================================================
 
         dot_radius = 2.5
@@ -492,7 +532,7 @@ with tab1:
 
 
         # =====================================================
-        # BORDURE AVEC ANGLES ARRONDIS
+        # BORDURE ARRONDIE
         # =====================================================
 
         draw.rounded_rectangle(
@@ -512,14 +552,16 @@ with tab1:
 
 
     # =========================================================
-    # GÉNÉRATION DES DOMINOS
+    # GÉNÉRATION DOMINOS
     # =========================================================
 
-    if uploaded_files and len(uploaded_files) >= 2:
+    if uploaded_files and len(
+        uploaded_files
+    ) >= 2:
 
 
         # -----------------------------------------------------
-        # IMPORT DES IMAGES + NOMS
+        # IMAGES + NOMS
         # -----------------------------------------------------
 
         images = [
@@ -536,22 +578,20 @@ with tab1:
         ]
 
 
-        # -----------------------------------------------------
-        # MÉLANGE ALÉATOIRE
-        # -----------------------------------------------------
-
         random.shuffle(
             images
         )
 
 
         # -----------------------------------------------------
-        # CRÉATION DES COUPLES
+        # COUPLES
         # -----------------------------------------------------
 
         dominos = []
 
-        n = len(images)
+        n = len(
+            images
+        )
 
 
         for i in range(n):
@@ -574,7 +614,7 @@ with tab1:
 
 
         # =====================================================
-        # CRÉATION DU PDF
+        # PDF
         # =====================================================
 
         pdf_buffer = io.BytesIO()
@@ -589,10 +629,6 @@ with tab1:
         width, height = A4
 
 
-        # -----------------------------------------------------
-        # CRÉATION DES PAGES
-        # -----------------------------------------------------
-
         for domino_pair in dominos:
 
             img1, img2, name1, name2 = (
@@ -605,7 +641,8 @@ with tab1:
                 img2,
                 name1,
                 name2,
-                background_color
+                background_color_domino,
+                cursive_domino
             )
 
 
@@ -619,10 +656,6 @@ with tab1:
             )
 
 
-            # -------------------------------------------------
-            # DIMENSIONNEMENT DANS LA PAGE A4
-            # -------------------------------------------------
-
             scale = min(
                 width / img_w * 0.8,
                 height / img_h * 0.8
@@ -633,13 +666,10 @@ with tab1:
                 img_w * scale
             )
 
-
             new_h = (
                 img_h * scale
             )
 
-
-            # Centrage
 
             x = (
                 width - new_w
@@ -650,10 +680,6 @@ with tab1:
                 height - new_h
             ) / 2
 
-
-            # -------------------------------------------------
-            # DESSIN DU DOMINO
-            # -------------------------------------------------
 
             c.drawImage(
                 img_reader,
@@ -667,24 +693,21 @@ with tab1:
             c.showPage()
 
 
-        # -----------------------------------------------------
-        # FINALISATION PDF
-        # -----------------------------------------------------
-
         c.save()
 
         pdf_buffer.seek(0)
 
 
         # =====================================================
-        # BOUTON PDF
+        # TÉLÉCHARGEMENT
         # =====================================================
 
         st.download_button(
             label="📄 Télécharger tous les dominos en PDF",
             data=pdf_buffer,
             file_name="dominos.pdf",
-            mime="application/pdf"
+            mime="application/pdf",
+            key="domino_download"
         )
 
 
@@ -702,7 +725,9 @@ with tab1:
             img2,
             name1,
             name2
-        ) in enumerate(dominos):
+        ) in enumerate(
+            dominos
+        ):
 
 
             domino = create_domino(
@@ -710,7 +735,8 @@ with tab1:
                 img2,
                 name1,
                 name2,
-                background_color
+                background_color_domino,
+                cursive_domino
             )
 
 
@@ -743,7 +769,7 @@ with tab2:
 
 
     # =========================================================
-    # CHOIX DE LA POLICE
+    # POLICE
     # =========================================================
 
     cursive_jai = st.checkbox(
@@ -767,127 +793,31 @@ with tab2:
 
 
     # =========================================================
-    # CHOIX DU FOND
+    # FOND
     # =========================================================
-
-    pastel_colors_jai = {
-
-        "🤍 Blanc":
-            (255, 255, 255),
-
-        "🌸 Rose pastel":
-            (255, 225, 235),
-
-        "🩵 Bleu pastel":
-            (220, 240, 255),
-
-        "🌿 Vert pastel":
-            (225, 245, 225),
-
-        "🍋 Jaune pastel":
-            (255, 248, 210),
-
-        "🍑 Pêche pastel":
-            (255, 230, 215),
-
-        "💜 Lavande":
-            (235, 225, 250),
-
-        "🩷 Rose poudré":
-            (245, 220, 225),
-    }
-
 
     background_name_jai = st.selectbox(
         "🎨 Couleur du fond des cartes",
-        list(pastel_colors_jai.keys()),
+        list(pastel_colors.keys()),
         index=0,
         key="jai_background"
     )
 
 
-    background_color_jai = pastel_colors_jai[
-        background_name_jai
-    ]
-
-
-    # =========================================================
-    # CHEMIN DE LA POLICE BOREL
-    # =========================================================
-
-    borel_path_jai = os.path.join(
-        os.path.dirname(
-            os.path.abspath(__file__)
-        ),
-        "Borel.ttf"
+    background_color_jai = (
+        pastel_colors[
+            background_name_jai
+        ]
     )
 
 
     # =========================================================
-    # FONCTION POUR CHOISIR LA POLICE
+    # POLICE REPORTLAB
     # =========================================================
 
-    def get_jai_font():
-
-        # -----------------------------------------------------
-        # POLICE BOREL
-        # -----------------------------------------------------
-
-        if cursive_jai:
-
-            if not os.path.exists(
-                borel_path_jai
-            ):
-
-                st.error(
-                    "❌ La police Borel est introuvable.\n\n"
-                    "Ajoute le fichier `Borel.ttf` "
-                    "dans le même dossier que ton fichier Python "
-                    "et dans ton dépôt Git."
-                )
-
-                st.stop()
-
-
-            return ImageFont.truetype(
-                borel_path_jai,
-                32
-            )
-
-
-        # -----------------------------------------------------
-        # POLICE PAR DÉFAUT
-        # -----------------------------------------------------
-
-        arial_path = (
-            "C:/Windows/Fonts/arial.ttf"
-        )
-
-
-        if os.path.exists(
-            arial_path
-        ):
-
-            return ImageFont.truetype(
-                arial_path,
-                32
-            )
-
-
-        # -----------------------------------------------------
-        # FALLBACK LINUX / STREAMLIT CLOUD
-        # -----------------------------------------------------
-
-        try:
-
-            return ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                32
-            )
-
-        except:
-
-            return ImageFont.load_default()
+    jai_pdf_font = get_reportlab_font(
+        cursive_jai
+    )
 
 
     # =========================================================
@@ -897,7 +827,11 @@ with tab2:
     uploaded_files = st.file_uploader(
         "Importer les images (PNG / JPG) – "
         "l’ordre définit le jeu",
-        type=["png", "jpg", "jpeg"],
+        type=[
+            "png",
+            "jpg",
+            "jpeg"
+        ],
         accept_multiple_files=True,
         key="jai_files"
     )
@@ -907,16 +841,22 @@ with tab2:
     # GÉNÉRATION
     # =========================================================
 
-    if uploaded_files and len(uploaded_files) >= 1:
+    if uploaded_files and len(
+        uploaded_files
+    ) >= 1:
+
 
         # -----------------------------------------------------
-        # IMPORT IMAGES + NOMS
+        # IMAGES + NOMS
         # -----------------------------------------------------
 
         images = [
 
             (
-                Image.open(f).convert("RGB"),
+                Image.open(
+                    f
+                ).convert("RGB"),
+
                 f.name
             )
 
@@ -938,6 +878,7 @@ with tab2:
             key="jai_generate"
         ):
 
+
             with tempfile.NamedTemporaryFile(
                 delete=False,
                 suffix=".pdf"
@@ -956,44 +897,41 @@ with tab2:
 
 
             # -------------------------------------------------
-            # DIMENSIONS DES CARTES
+            # DIMENSIONS
             # -------------------------------------------------
 
-            card_margin = 1.5 * cm
+            card_margin = (
+                1.5 * cm
+            )
+
 
             card_width = (
                 page_width
                 - 2 * card_margin
             )
 
+
             card_height = (
                 page_height
                 - 2 * card_margin
             )
 
+
             corner_radius = 25
+
 
             total_cards = (
                 len(images) + 1
             )
 
 
-            # =================================================
-            # POLICE REPORTLAB
-            # =================================================
-
-            # ReportLab ne sait pas utiliser directement
-            # Borel.ttf comme Helvetica.
-            #
-            # On utilise donc Borel uniquement pour les
-            # noms des images dans une image PIL.
-            #
-            # Les textes "J'ai", "Qui a ?" restent en
-            # Helvetica.
+            center_y = (
+                page_height / 2
+            )
 
 
             # =================================================
-            # CRÉATION DES CARTES
+            # CARTES
             # =================================================
 
             for i in range(
@@ -1050,17 +988,16 @@ with tab2:
                 )
 
 
-                center_y = (
-                    page_height / 2
-                )
-
-
                 # =================================================
                 # PREMIÈRE CARTE
                 # =================================================
 
                 if i == 0:
 
+
+                    # -------------------------------------------------
+                    # TITRE
+                    # -------------------------------------------------
 
                     c.setFont(
                         "Helvetica-Bold",
@@ -1077,6 +1014,10 @@ with tab2:
                     )
 
 
+                    # -------------------------------------------------
+                    # QUI A ?
+                    # -------------------------------------------------
+
                     c.setFont(
                         "Helvetica-Bold",
                         40
@@ -1091,13 +1032,13 @@ with tab2:
 
 
                     # -------------------------------------------------
-                    # IMAGE + NOM
+                    # IMAGE
                     # -------------------------------------------------
 
                     img, img_name = images[0]
 
 
-                    img_path = (
+                    first_img_path = (
                         tempfile
                         .NamedTemporaryFile(
                             delete=False,
@@ -1108,12 +1049,12 @@ with tab2:
 
 
                     img.save(
-                        img_path
+                        first_img_path
                     )
 
 
                     c.drawImage(
-                        img_path,
+                        first_img_path,
                         card_margin + 2 * cm,
                         card_margin + 3 * cm,
                         card_width - 4 * cm,
@@ -1123,24 +1064,22 @@ with tab2:
 
 
                     os.remove(
-                        img_path
+                        first_img_path
                     )
 
 
                     # -------------------------------------------------
-                    # NOM DE L'IMAGE
+                    # NOM
                     # -------------------------------------------------
 
-                    name_without_extension = (
-                        img_name.rsplit(
-                            ".",
-                            1
-                        )[0]
-                    )
+                    img_name = img_name.rsplit(
+                        ".",
+                        1
+                    )[0]
 
 
                     c.setFont(
-                        "Helvetica",
+                        jai_pdf_font,
                         22
                     )
 
@@ -1148,7 +1087,7 @@ with tab2:
                     c.drawCentredString(
                         page_width / 2,
                         card_margin + 2 * cm,
-                        name_without_extension
+                        img_name
                     )
 
 
@@ -1189,7 +1128,7 @@ with tab2:
 
 
                     # -------------------------------------------------
-                    # IMAGE J'AI
+                    # IMAGE DU HAUT
                     # -------------------------------------------------
 
                     have_path = (
@@ -1223,7 +1162,7 @@ with tab2:
 
 
                     # -------------------------------------------------
-                    # NOM IMAGE J'AI
+                    # NOM DU HAUT
                     # -------------------------------------------------
 
                     name_have = name_have.rsplit(
@@ -1233,7 +1172,7 @@ with tab2:
 
 
                     c.setFont(
-                        "Helvetica",
+                        jai_pdf_font,
                         22
                     )
 
@@ -1263,7 +1202,7 @@ with tab2:
 
 
                     # -------------------------------------------------
-                    # IMAGE QUI A
+                    # IMAGE DU BAS
                     # -------------------------------------------------
 
                     who_path = (
@@ -1297,7 +1236,7 @@ with tab2:
 
 
                     # -------------------------------------------------
-                    # NOM IMAGE QUI A
+                    # NOM DU BAS
                     # -------------------------------------------------
 
                     name_who = name_who.rsplit(
@@ -1307,7 +1246,7 @@ with tab2:
 
 
                     c.setFont(
-                        "Helvetica",
+                        jai_pdf_font,
                         22
                     )
 
@@ -1330,6 +1269,10 @@ with tab2:
                         -1
                     ]
 
+
+                    # -------------------------------------------------
+                    # J'AI
+                    # -------------------------------------------------
 
                     c.setFont(
                         "Helvetica-Bold",
@@ -1391,7 +1334,7 @@ with tab2:
 
 
                     c.setFont(
-                        "Helvetica",
+                        jai_pdf_font,
                         22
                     )
 
