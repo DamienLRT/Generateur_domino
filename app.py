@@ -24,7 +24,7 @@ st.set_page_config(
 
 
 # =============================================================
-# ONGLET
+# ONGLETS
 # =============================================================
 
 tab0, tab1, tab2 = st.tabs([
@@ -82,7 +82,14 @@ borel_path = os.path.join(
 # FONCTION : POLICE POUR PIL
 # =============================================================
 
-def get_pil_font(cursive):
+def get_pil_font(
+    cursive,
+    font_size
+):
+
+    # ---------------------------------------------------------
+    # POLICE CURSIVE BOREL
+    # ---------------------------------------------------------
 
     if cursive:
 
@@ -98,14 +105,15 @@ def get_pil_font(cursive):
 
             st.stop()
 
+
         return ImageFont.truetype(
             borel_path,
-            32
+            int(font_size)
         )
 
 
     # ---------------------------------------------------------
-    # POLICE NORMALE
+    # POLICE ARIAL WINDOWS
     # ---------------------------------------------------------
 
     arial_path = (
@@ -119,19 +127,19 @@ def get_pil_font(cursive):
 
         return ImageFont.truetype(
             arial_path,
-            32
+            int(font_size)
         )
 
 
     # ---------------------------------------------------------
-    # FALLBACK LINUX / STREAMLIT CLOUD
+    # POLICE LINUX / STREAMLIT CLOUD
     # ---------------------------------------------------------
 
     try:
 
         return ImageFont.truetype(
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            32
+            int(font_size)
         )
 
     except:
@@ -143,7 +151,9 @@ def get_pil_font(cursive):
 # FONCTION : POLICE POUR REPORTLAB
 # =============================================================
 
-def get_reportlab_font(cursive):
+def get_reportlab_font(
+    cursive
+):
 
     if cursive:
 
@@ -188,6 +198,7 @@ with tab0:
         "ℹ️ À propos du projet"
     )
 
+
     st.markdown("""
 Ce projet est né d’un besoin personnel.
 
@@ -209,520 +220,584 @@ afin de lui permettre de créer facilement des supports ludiques et pédagogique
 ✨ Ce projet continue d’évoluer au fil des besoins de la classe et des retours terrain.
 """)
 
-# =========================================================
-# IMPORT DES IMAGES
-# =========================================================
 
-uploaded_files = st.file_uploader(
-    "📷 Importez vos images",
-    type=["png", "jpg", "jpeg", "webp"],
-    accept_multiple_files=True
-)
+# =============================================================
+# ONGLET 1 : DOMINOS
+# =============================================================
 
-# =========================================================
-# TAILLE DU TEXTE
-# =========================================================
+with tab1:
 
-font_size_domino = st.number_input(
-    "Taille du texte des noms",
-    min_value=5,
-    max_value=100,
-    value=20,
-    step=1
-)
-
-
-# =========================================================
-# CRÉATION DOMINO
-# =========================================================
-
-def create_domino(
-    img1,
-    img2,
-    name1,
-    name2,
-    background_color,
-    cursive,
-    font_size=20,
-    size=(400, 700)
-):
-
-    image_width = size[0]
-
-    image_height = 280
-
-    text_height = 70
-
-
-    # -----------------------------------------------------
-    # FOND
-    # -----------------------------------------------------
-
-    domino = Image.new(
-        "RGB",
-        size,
-        background_color
-    )
-
-    draw = ImageDraw.Draw(
-        domino
+    st.header(
+        "🎲 Créateur de dominos"
     )
 
 
-    # -----------------------------------------------------
-    # POLICE
-    # -----------------------------------------------------
+    # =========================================================
+    # CHOIX DE LA POLICE
+    # =========================================================
 
-    font = get_pil_font(
+    cursive_domino = st.checkbox(
+        "✍️ Police cursive",
+        value=True,
+        key="domino_cursive"
+    )
+
+
+    if cursive_domino:
+
+        st.caption(
+            "Police utilisée : Borel"
+        )
+
+    else:
+
+        st.caption(
+            "Police utilisée : police normale"
+        )
+
+
+    # =========================================================
+    # CHOIX DU FOND
+    # =========================================================
+
+    background_name_domino = st.selectbox(
+        "🎨 Couleur du fond des dominos",
+        list(pastel_colors.keys()),
+        index=0,
+        key="domino_background"
+    )
+
+
+    background_color_domino = (
+        pastel_colors[
+            background_name_domino
+        ]
+    )
+
+
+    # =========================================================
+    # TAILLE DU TEXTE
+    # =========================================================
+
+    font_size_domino = st.number_input(
+        "🔤 Taille du texte des noms",
+        min_value=5,
+        max_value=100,
+        value=20,
+        step=1,
+        key="domino_font_size"
+    )
+
+
+    st.caption(
+        f"Taille actuelle : {font_size_domino}"
+    )
+
+
+    # =========================================================
+    # IMPORT DES IMAGES
+    # =========================================================
+
+    uploaded_domino_files = st.file_uploader(
+        "📷 Importez vos images pour les dominos",
+        type=[
+            "png",
+            "jpg",
+            "jpeg",
+            "webp"
+        ],
+        accept_multiple_files=True,
+        key="domino_files"
+    )
+
+
+    # =========================================================
+    # CRÉATION DOMINO
+    # =========================================================
+
+    def create_domino(
+        img1,
+        img2,
+        name1,
+        name2,
+        background_color,
         cursive,
-        font_size
-    )
-
-
-    # =====================================================
-    # PLACER IMAGE
-    # =====================================================
-
-    def paste_with_background(
-        base,
-        img,
-        position,
-        img_size
+        font_size=20,
+        size=(400, 700)
     ):
 
-        img = img.copy()
+        image_width = size[0]
 
-        img.thumbnail(
+        image_height = 280
+
+        text_height = 70
+
+
+        # -----------------------------------------------------
+        # FOND
+        # -----------------------------------------------------
+
+        domino = Image.new(
+            "RGB",
+            size,
+            background_color
+        )
+
+
+        draw = ImageDraw.Draw(
+            domino
+        )
+
+
+        # -----------------------------------------------------
+        # POLICE
+        # -----------------------------------------------------
+
+        font = get_pil_font(
+            cursive,
+            font_size
+        )
+
+
+        # =====================================================
+        # PLACER UNE IMAGE
+        # =====================================================
+
+        def paste_with_background(
+            base,
+            img,
+            position,
             img_size
-        )
-
-
-        x = (
-            position[0]
-            + (
-                img_size[0]
-                - img.width
-            ) // 2
-        )
-
-
-        y = (
-            position[1]
-            + (
-                img_size[1]
-                - img.height
-            ) // 2
-        )
-
-
-        # -------------------------------------------------
-        # TRANSPARENCE
-        # -------------------------------------------------
-
-        if (
-            img.mode in (
-                "RGBA",
-                "LA"
-            )
-            or (
-                img.mode == "P"
-                and "transparency"
-                in img.info
-            )
         ):
 
-            alpha = (
-                img.convert(
-                    "RGBA"
-                ).split()[-1]
+            img = img.copy()
+
+
+            img.thumbnail(
+                img_size
             )
 
 
-            bg = Image.new(
-                "RGBA",
-                img.size,
-                background_color + (
-                    255,
+            x = (
+                position[0]
+                + (
+                    img_size[0]
+                    - img.width
+                ) // 2
+            )
+
+
+            y = (
+                position[1]
+                + (
+                    img_size[1]
+                    - img.height
+                ) // 2
+            )
+
+
+            # -------------------------------------------------
+            # TRANSPARENCE
+            # -------------------------------------------------
+
+            if (
+                img.mode in (
+                    "RGBA",
+                    "LA"
+                )
+                or (
+                    img.mode == "P"
+                    and "transparency"
+                    in img.info
+                )
+            ):
+
+                img_rgba = img.convert(
+                    "RGBA"
+                )
+
+
+                alpha = img_rgba.split()[-1]
+
+
+                bg = Image.new(
+                    "RGBA",
+                    img_rgba.size,
+                    background_color + (
+                        255,
+                    )
+                )
+
+
+                bg.paste(
+                    img_rgba,
+                    mask=alpha
+                )
+
+
+                base.paste(
+                    bg.convert(
+                        "RGB"
+                    ),
+                    (x, y)
+                )
+
+
+            else:
+
+                base.paste(
+                    img.convert(
+                        "RGB"
+                    ),
+                    (x, y)
+                )
+
+
+        # =====================================================
+        # NOMS
+        # =====================================================
+
+        name1 = name1.rsplit(
+            ".",
+            1
+        )[0]
+
+
+        name2 = name2.rsplit(
+            ".",
+            1
+        )[0]
+
+
+        # =====================================================
+        # IMAGE 1
+        # =====================================================
+
+        paste_with_background(
+            domino,
+            img1,
+            (0, 0),
+            (
+                image_width,
+                image_height
+            )
+        )
+
+
+        # =====================================================
+        # NOM 1
+        # =====================================================
+
+        draw.text(
+            (
+                image_width // 2,
+                image_height
+                + text_height // 2
+            ),
+            name1,
+            fill="black",
+            font=font,
+            anchor="mm"
+        )
+
+
+        # =====================================================
+        # IMAGE 2
+        # =====================================================
+
+        second_y = (
+            image_height
+            + text_height
+        )
+
+
+        paste_with_background(
+            domino,
+            img2,
+            (0, second_y),
+            (
+                image_width,
+                image_height
+            )
+        )
+
+
+        # =====================================================
+        # NOM 2
+        # =====================================================
+
+        draw.text(
+            (
+                image_width // 2,
+                second_y
+                + image_height
+                + text_height // 2
+            ),
+            name2,
+            fill="black",
+            font=font,
+            anchor="mm"
+        )
+
+
+        # =====================================================
+        # PETITS POINTS
+        # =====================================================
+
+        dot_radius = 2.5
+
+        gap = 14
+
+        x = 8
+
+
+        while x < image_width - 8:
+
+            draw.ellipse(
+                (
+                    x - dot_radius,
+                    second_y - dot_radius,
+                    x + dot_radius,
+                    second_y + dot_radius
+                ),
+                fill="black"
+            )
+
+            x += gap
+
+
+        # =====================================================
+        # BORDURE ARRONDIE
+        # =====================================================
+
+        draw.rounded_rectangle(
+            (
+                2,
+                2,
+                image_width - 3,
+                size[1] - 3
+            ),
+            radius=25,
+            outline="black",
+            width=4
+        )
+
+
+        return domino
+
+
+    # =========================================================
+    # GÉNÉRATION DOMINOS
+    # =========================================================
+
+    if (
+        uploaded_domino_files
+        and len(uploaded_domino_files) >= 2
+    ):
+
+
+        # -----------------------------------------------------
+        # IMAGES + NOMS
+        # -----------------------------------------------------
+
+        images = [
+
+            (
+                Image.open(
+                    f
+                ).convert("RGBA"),
+
+                f.name
+            )
+
+            for f in uploaded_domino_files
+        ]
+
+
+        # -----------------------------------------------------
+        # MÉLANGE ALÉATOIRE
+        # -----------------------------------------------------
+
+        random.shuffle(
+            images
+        )
+
+
+        # -----------------------------------------------------
+        # COUPLES
+        # -----------------------------------------------------
+
+        dominos = []
+
+        n = len(
+            images
+        )
+
+
+        for i in range(n):
+
+            img1, name1 = images[i]
+
+            img2, name2 = images[
+                (i + 1) % n
+            ]
+
+
+            dominos.append(
+                (
+                    img1,
+                    img2,
+                    name1,
+                    name2
                 )
             )
 
 
-            bg.paste(
-                img,
-                mask=alpha
+        # =====================================================
+        # CRÉATION DU PDF
+        # =====================================================
+
+        pdf_buffer = io.BytesIO()
+
+
+        c = canvas.Canvas(
+            pdf_buffer,
+            pagesize=A4
+        )
+
+
+        width, height = A4
+
+
+        for domino_pair in dominos:
+
+            img1, img2, name1, name2 = (
+                domino_pair
             )
 
 
-            base.paste(
-                bg.convert(
-                    "RGB"
-                ),
-                (x, y)
-            )
-
-
-        else:
-
-            base.paste(
-                img.convert(
-                    "RGB"
-                ),
-                (x, y)
-            )
-
-
-    # =====================================================
-    # NOMS
-    # =====================================================
-
-    name1 = name1.rsplit(
-        ".",
-        1
-    )[0]
-
-
-    name2 = name2.rsplit(
-        ".",
-        1
-    )[0]
-
-
-    # =====================================================
-    # IMAGE 1
-    # =====================================================
-
-    paste_with_background(
-        domino,
-        img1,
-        (0, 0),
-        (
-            image_width,
-            image_height
-        )
-    )
-
-
-    # =====================================================
-    # NOM 1
-    # =====================================================
-
-    draw.text(
-        (
-            image_width // 2,
-            image_height
-            + text_height // 2
-        ),
-        name1,
-        fill="black",
-        font=font,
-        anchor="mm"
-    )
-
-
-    # =====================================================
-    # IMAGE 2
-    # =====================================================
-
-    second_y = (
-        image_height
-        + text_height
-    )
-
-
-    paste_with_background(
-        domino,
-        img2,
-        (0, second_y),
-        (
-            image_width,
-            image_height
-        )
-    )
-
-
-    # =====================================================
-    # NOM 2
-    # =====================================================
-
-    draw.text(
-        (
-            image_width // 2,
-            second_y
-            + image_height
-            + text_height // 2
-        ),
-        name2,
-        fill="black",
-        font=font,
-        anchor="mm"
-    )
-
-
-    # =====================================================
-    # PETITS POINTS
-    # =====================================================
-
-    dot_radius = 2.5
-
-    gap = 14
-
-    x = 8
-
-
-    while x < image_width - 8:
-
-        draw.ellipse(
-            (
-                x - dot_radius,
-                second_y - dot_radius,
-                x + dot_radius,
-                second_y + dot_radius
-            ),
-            fill="black"
-        )
-
-        x += gap
-
-
-    # =====================================================
-    # BORDURE ARRONDIE
-    # =====================================================
-
-    draw.rounded_rectangle(
-        (
-            2,
-            2,
-            image_width - 3,
-            size[1] - 3
-        ),
-        radius=25,
-        outline="black",
-        width=4
-    )
-
-
-    return domino
-
-
-# =========================================================
-# TAILLE DU TEXTE
-# =========================================================
-
-font_size_domino = st.number_input(
-    "Taille du texte des noms",
-    min_value=5,
-    max_value=100,
-    value=20,
-    step=1
-)
-
-
-# =========================================================
-# GÉNÉRATION DOMINOS
-# =========================================================
-
-if uploaded_files and len(
-    uploaded_files
-) >= 2:
-
-
-    # -----------------------------------------------------
-    # IMAGES + NOMS
-    # -----------------------------------------------------
-
-    images = [
-
-        (
-            Image.open(
-                f
-            ).convert("RGBA"),
-
-            f.name
-        )
-
-        for f in uploaded_files
-    ]
-
-
-    random.shuffle(
-        images
-    )
-
-
-    # -----------------------------------------------------
-    # COUPLES
-    # -----------------------------------------------------
-
-    dominos = []
-
-    n = len(
-        images
-    )
-
-
-    for i in range(n):
-
-        img1, name1 = images[i]
-
-        img2, name2 = images[
-            (i + 1) % n
-        ]
-
-
-        dominos.append(
-            (
+            domino_img = create_domino(
                 img1,
                 img2,
                 name1,
-                name2
+                name2,
+                background_color_domino,
+                cursive_domino,
+                font_size=font_size_domino
             )
+
+
+            img_reader = ImageReader(
+                domino_img
+            )
+
+
+            img_w, img_h = (
+                domino_img.size
+            )
+
+
+            scale = min(
+                width / img_w * 0.8,
+                height / img_h * 0.8
+            )
+
+
+            new_w = (
+                img_w * scale
+            )
+
+            new_h = (
+                img_h * scale
+            )
+
+
+            x = (
+                width - new_w
+            ) / 2
+
+
+            y = (
+                height - new_h
+            ) / 2
+
+
+            c.drawImage(
+                img_reader,
+                x,
+                y,
+                width=new_w,
+                height=new_h
+            )
+
+
+            c.showPage()
+
+
+        c.save()
+
+        pdf_buffer.seek(0)
+
+
+        # =====================================================
+        # TÉLÉCHARGEMENT PDF
+        # =====================================================
+
+        st.download_button(
+            label="📄 Télécharger tous les dominos en PDF",
+            data=pdf_buffer,
+            file_name="dominos.pdf",
+            mime="application/pdf",
+            key="domino_download"
         )
 
 
-    # =====================================================
-    # PDF
-    # =====================================================
+        # =====================================================
+        # APERÇU
+        # =====================================================
 
-    pdf_buffer = io.BytesIO()
-
-
-    c = canvas.Canvas(
-        pdf_buffer,
-        pagesize=A4
-    )
-
-
-    width, height = A4
-
-
-    for domino_pair in dominos:
-
-        img1, img2, name1, name2 = (
-            domino_pair
+        st.subheader(
+            f"{len(dominos)} dominos générés"
         )
 
 
-        domino_img = create_domino(
+        for i, (
             img1,
             img2,
             name1,
-            name2,
-            background_color_domino,
-            cursive_domino,
-            font_size=font_size_domino
+            name2
+        ) in enumerate(
+            dominos
+        ):
+
+
+            domino = create_domino(
+                img1,
+                img2,
+                name1,
+                name2,
+                background_color_domino,
+                cursive_domino,
+                font_size=font_size_domino
+            )
+
+
+            st.image(
+                domino,
+                caption=f"Domino {i + 1}"
+            )
+
+
+            st.divider()
+
+
+    else:
+
+        st.info(
+            "👉 Importez au moins 2 images "
+            "pour générer des dominos."
         )
 
-
-        img_reader = ImageReader(
-            domino_img
-        )
-
-
-        img_w, img_h = (
-            domino_img.size
-        )
-
-
-        scale = min(
-            width / img_w * 0.8,
-            height / img_h * 0.8
-        )
-
-
-        new_w = (
-            img_w * scale
-        )
-
-        new_h = (
-            img_h * scale
-        )
-
-
-        x = (
-            width - new_w
-        ) / 2
-
-
-        y = (
-            height - new_h
-        ) / 2
-
-
-        c.drawImage(
-            img_reader,
-            x,
-            y,
-            width=new_w,
-            height=new_h
-        )
-
-
-        c.showPage()
-
-
-    c.save()
-
-    pdf_buffer.seek(0)
-
-
-    # =====================================================
-    # TÉLÉCHARGEMENT
-    # =====================================================
-
-    st.download_button(
-        label="📄 Télécharger tous les dominos en PDF",
-        data=pdf_buffer,
-        file_name="dominos.pdf",
-        mime="application/pdf",
-        key="domino_download"
-    )
-
-
-    # =====================================================
-    # APERÇU
-    # =====================================================
-
-    st.subheader(
-        f"{len(dominos)} dominos générés"
-    )
-
-
-    for i, (
-        img1,
-        img2,
-        name1,
-        name2
-    ) in enumerate(
-        dominos
-    ):
-
-
-        domino = create_domino(
-            img1,
-            img2,
-            name1,
-            name2,
-            background_color_domino,
-            cursive_domino,
-            font_size=font_size_domino
-        )
-
-
-        st.image(
-            domino,
-            caption=f"Domino {i + 1}"
-        )
-
-
-        st.divider()
-
-
-else:
-
-    st.info(
-        "👉 Importez au moins 2 images "
-        "pour générer des dominos."
-    )
 
 # =============================================================
 # ONGLET 2 : J'AI... QUI A ?
@@ -730,7 +805,9 @@ else:
 
 with tab2:
 
-    st.header("« J’ai… qui a ? »")
+    st.header(
+        "« J’ai… qui a ? »"
+    )
 
 
     # =========================================================
@@ -743,10 +820,18 @@ with tab2:
         key="jai_cursive"
     )
 
+
     if cursive_jai:
-        st.caption("Police utilisée : Borel")
+
+        st.caption(
+            "Police utilisée : Borel"
+        )
+
     else:
-        st.caption("Police utilisée : police par défaut")
+
+        st.caption(
+            "Police utilisée : police par défaut"
+        )
 
 
     # =========================================================
@@ -760,6 +845,7 @@ with tab2:
         key="jai_background"
     )
 
+
     background_color_jai = pastel_colors[
         background_name_jai
     ]
@@ -769,10 +855,14 @@ with tab2:
     # IMPORT DES IMAGES
     # =========================================================
 
-    uploaded_files = st.file_uploader(
+    uploaded_jai_files = st.file_uploader(
         "Importer les images (PNG / JPG) – "
         "l’ordre définit le jeu",
-        type=["png", "jpg", "jpeg"],
+        type=[
+            "png",
+            "jpg",
+            "jpeg"
+        ],
         accept_multiple_files=True,
         key="jai_files"
     )
@@ -782,18 +872,27 @@ with tab2:
     # SI DES IMAGES SONT IMPORTÉES
     # =========================================================
 
-    if uploaded_files and len(uploaded_files) >= 1:
+    if (
+        uploaded_jai_files
+        and len(uploaded_jai_files) >= 1
+    ):
+
 
         # -----------------------------------------------------
         # IMPORT DES IMAGES + NOMS
         # -----------------------------------------------------
 
         images = [
+
             (
-                Image.open(f).convert("RGB"),
+                Image.open(
+                    f
+                ).convert("RGB"),
+
                 f.name
             )
-            for f in uploaded_files
+
+            for f in uploaded_jai_files
         ]
 
 
@@ -811,13 +910,16 @@ with tab2:
             key="jai_generate"
         ):
 
+
             # =================================================
             # CHOIX DE LA POLICE
             # =================================================
 
             if cursive_jai:
 
-                if not os.path.exists(borel_path):
+                if not os.path.exists(
+                    borel_path
+                ):
 
                     st.error(
                         "❌ Le fichier Borel.ttf est introuvable.\n\n"
@@ -875,23 +977,30 @@ with tab2:
             # DIMENSIONS DES CARTES
             # =================================================
 
-            card_margin = 1.5 * cm
+            card_margin = (
+                1.5 * cm
+            )
+
 
             card_width = (
                 page_width
                 - 2 * card_margin
             )
 
+
             card_height = (
                 page_height
                 - 2 * card_margin
             )
 
+
             corner_radius = 25
+
 
             center_y = (
                 page_height / 2
             )
+
 
             total_cards = (
                 len(images) + 1
@@ -902,7 +1011,9 @@ with tab2:
             # CRÉATION DES CARTES
             # =================================================
 
-            for i in range(total_cards):
+            for i in range(
+                total_cards
+            ):
 
 
                 # =================================================
@@ -937,7 +1048,10 @@ with tab2:
                     0
                 )
 
-                c.setLineWidth(3)
+
+                c.setLineWidth(
+                    3
+                )
 
 
                 c.roundRect(
@@ -967,6 +1081,7 @@ with tab2:
                 # =================================================
 
                 if i == 0:
+
 
                     # ---------------------------------------------
                     # TEXTE DU HAUT
@@ -1070,9 +1185,15 @@ with tab2:
 
                 elif i < total_cards - 1:
 
-                    img_have, name_have = images[i - 1]
 
-                    img_who, name_who = images[i]
+                    img_have, name_have = images[
+                        i - 1
+                    ]
+
+
+                    img_who, name_who = images[
+                        i
+                    ]
 
 
                     # ---------------------------------------------
@@ -1231,7 +1352,10 @@ with tab2:
 
                 else:
 
-                    img_last, name_last = images[-1]
+
+                    img_last, name_last = images[
+                        -1
+                    ]
 
 
                     # ---------------------------------------------
