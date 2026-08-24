@@ -210,6 +210,29 @@ afin de lui permettre de créer facilement des supports ludiques et pédagogique
 """)
 
 # =========================================================
+# IMPORT DES IMAGES
+# =========================================================
+
+uploaded_files = st.file_uploader(
+    "📷 Importez vos images",
+    type=["png", "jpg", "jpeg", "webp"],
+    accept_multiple_files=True
+)
+
+# =========================================================
+# TAILLE DU TEXTE
+# =========================================================
+
+font_size_domino = st.number_input(
+    "Taille du texte des noms",
+    min_value=5,
+    max_value=100,
+    value=20,
+    step=1
+)
+
+
+# =========================================================
 # CRÉATION DOMINO
 # =========================================================
 
