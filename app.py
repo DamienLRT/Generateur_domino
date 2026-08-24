@@ -348,28 +348,28 @@ with tab1:
 
 
         # -----------------------------------------------------
-        # LIGNE CENTRALE
+        # LIGNE CENTRALE EN PETITS POINTS
         # -----------------------------------------------------
 
-dot_radius = 2.5
-gap = 14
+        dot_radius = 2.5
+        gap = 14
 
-x = 8
+        x = 8
 
-while x < image_width - 8:
+        while x < image_width - 8:
 
-    draw.ellipse(
-        (
-            x - dot_radius,
-            second_y - dot_radius,
-            x + dot_radius,
-            second_y + dot_radius
-        ),
-        fill="black"
-    )
-    
-    x += gap
-    
+            draw.ellipse(
+                (
+                    x - dot_radius,
+                    second_y - dot_radius,
+                    x + dot_radius,
+                    second_y + dot_radius
+                ),
+                fill="black"
+            )
+
+            x += gap
+
 
         # -----------------------------------------------------
         # BORDURE
