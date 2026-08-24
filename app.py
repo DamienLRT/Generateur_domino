@@ -1,210 +1,331 @@
 import streamlit as st
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import io
 import random
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
-import tempfile
-import os
-from reportlab.lib.units import cm
-
-# Config générale
-st.set_page_config(page_title="Outils ludiques - Dominos et J'ai...", layout="centered")
-
-# Onglets
-tab0, tab1, tab2 = st.tabs(["A propos","🎲 Dominos", "🃏 J’ai… qui a ?"])
-
-# =========================
-# Onglet 3 : À propos
-# =========================
-with tab0:
-    st.header("ℹ️ À propos du projet")
-
-    st.markdown("""
-Ce projet est né d’un besoin personnel.
-
-👉 Il a été conçu pour ma fiancée, institutrice en maternelle,  
-afin de lui permettre de créer facilement des supports ludiques et pédagogiques utilisés dans l'apprentissage du lexique.
-
-🎯 Objectif :
-- Faciliter l’apprentissage du lexique chez les jeunes enfants  
-- Transformer des images en jeux éducatifs (dominos, “J’ai… qui a ?”)  
-- Gagner du temps dans la création de ressources personnalisées  
-
-🧠 L’idée est de rendre la création d’outils pédagogiques :
-- simple  
-- rapide  
-- et entièrement personnalisable  
-
-✨ Ce projet continue d’évoluer au fil des besoins de la classe et des retours terrain.
-""")
 
 
-# =========================
-# Onglet 1 : Dominos
-# =========================
-with tab1:
-    st.header("Générateur de dominos - Fond blanc + PDF avant aperçu")
+# =============================================================
+# CONFIGURATION
+# =============================================================
 
-    uploaded_files = st.file_uploader(
-        "Importe tes images",
-        accept_multiple_files=True,
-        type=["png", "jpg", "jpeg"]
+st.set_page_config(
+    page_title="Générateur de dominos",
+    layout="centered"
+)
+
+st.title("Générateur de dominos - Fond blanc + PDF")
+
+
+# =============================================================
+# IMPORT DES IMAGES
+# =============================================================
+
+uploaded_files = st.file_uploader(
+    "Importe tes images",
+    accept_multiple_files=True,
+    type=["png", "jpg", "jpeg"]
+)
+
+
+# =============================================================
+# CRÉATION D'UN DOMINO
+# =============================================================
+
+def create_domino(img1, img2, name1, name2, size=(400, 700)):
+    """
+    Crée un domino avec :
+    - une première image
+    - le nom de la première image
+    - une deuxième image
+    - le nom de la deuxième image
+    """
+
+    image_width = size[0]
+    image_height = 280
+    text_height = 70
+
+    # Fond blanc
+    domino = Image.new("RGB", size, "white")
+
+    draw = ImageDraw.Draw(domino)
+
+    # ---------------------------------------------------------
+    # POLICE DES NOMS
+    # ---------------------------------------------------------
+
+    font = ImageFont.truetype("arial.ttf", 30)
+
+    # ---------------------------------------------------------
+    # FONCTION POUR PLACER UNE IMAGE
+    # ---------------------------------------------------------
+
+    def paste_with_white_background(base, img, position, img_size):
+
+        img = img.copy()
+
+        # Conserver les proportions de l'image
+        img.thumbnail(img_size)
+
+        # Centrer l'image
+        x = position[0] + (img_size[0] - img.width) // 2
+        y = position[1] + (img_size[1] - img.height) // 2
+
+        # Gestion de la transparence
+        if img.mode in ("RGBA", "LA") or (
+            img.mode == "P"
+            and "transparency" in img.info
+        ):
+
+            alpha = img.convert("RGBA").split()[-1]
+
+            bg = Image.new(
+                "RGBA",
+                img.size,
+                (255, 255, 255, 255)
+            )
+
+            bg.paste(
+                img,
+                mask=alpha
+            )
+
+            base.paste(
+                bg.convert("RGB"),
+                (x, y)
+            )
+
+        else:
+
+            base.paste(
+                img.convert("RGB"),
+                (x, y)
+            )
+
+    # ---------------------------------------------------------
+    # NETTOYAGE DES NOMS
+    # ---------------------------------------------------------
+
+    # Retire l'extension .jpg / .png / .jpeg
+    name1 = name1.rsplit(".", 1)[0]
+    name2 = name2.rsplit(".", 1)[0]
+
+    # ---------------------------------------------------------
+    # PREMIÈRE IMAGE
+    # ---------------------------------------------------------
+
+    paste_with_white_background(
+        domino,
+        img1,
+        (0, 0),
+        (image_width, image_height)
     )
 
-    def create_domino(img1, img2, size=(300, 600)):
-        img1 = img1.resize((size[0], size[1] // 2))
-        img2 = img2.resize((size[0], size[1] // 2))
+    # Nom de la première image
+    draw.text(
+        (
+            image_width // 2,
+            image_height + text_height // 2
+        ),
+        name1,
+        fill="black",
+        font=font,
+        anchor="mm"
+    )
 
-        domino = Image.new("RGB", size, (255, 255, 255))  # fond blanc
+    # ---------------------------------------------------------
+    # DEUXIÈME IMAGE
+    # ---------------------------------------------------------
 
-        def paste_with_white_background(base, img, position):
-            if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
-                alpha = img.convert('RGBA').split()[-1]
-                bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
-                bg.paste(img, mask=alpha)
-                base.paste(bg.convert("RGB"), position)
-            else:
-                base.paste(img, position)
+    second_y = image_height + text_height
 
-        paste_with_white_background(domino, img1, (0, 0))
-        paste_with_white_background(domino, img2, (0, size[1] // 2))
+    paste_with_white_background(
+        domino,
+        img2,
+        (0, second_y),
+        (image_width, image_height)
+    )
 
-        draw = ImageDraw.Draw(domino)
-        draw.line((0, size[1] // 2, size[0], size[1] // 2), fill="black", width=4)
-        draw.rectangle((0, 0, size[0]-1, size[1]-1), outline="black", width=4)
+    # Nom de la deuxième image
+    draw.text(
+        (
+            image_width // 2,
+            second_y + image_height + text_height // 2
+        ),
+        name2,
+        fill="black",
+        font=font,
+        anchor="mm"
+    )
 
-        return domino
+    # ---------------------------------------------------------
+    # LIGNE CENTRALE
+    # ---------------------------------------------------------
 
-    if uploaded_files and len(uploaded_files) >= 2:
-        images = [Image.open(f).convert("RGBA") for f in uploaded_files]
-        random.shuffle(images)
+    draw.line(
+        (
+            0,
+            second_y,
+            image_width,
+            second_y
+        ),
+        fill="black",
+        width=4
+    )
 
-        dominos = []
-        n = len(images)
-        for i in range(n):
-            img1 = images[i]
-            img2 = images[(i + 1) % n]  # boucle circulaire
-            dominos.append((img1, img2))
+    # ---------------------------------------------------------
+    # BORDURE DU DOMINO
+    # ---------------------------------------------------------
 
-        # PDF
-        pdf_buffer = io.BytesIO()
-        c = canvas.Canvas(pdf_buffer, pagesize=A4)
-        width, height = A4
+    draw.rectangle(
+        (
+            0,
+            0,
+            image_width - 1,
+            size[1] - 1
+        ),
+        outline="black",
+        width=4
+    )
 
-        for domino_pair in dominos:
-            domino_img = create_domino(domino_pair[0], domino_pair[1])
-            img_reader = ImageReader(domino_img)
-            img_w, img_h = domino_img.size
-            scale = min(width / img_w * 0.8, height / img_h * 0.8)
-            new_w, new_h = img_w * scale, img_h * scale
-            x = (width - new_w) / 2
-            y = (height - new_h) / 2
-            c.drawImage(img_reader, x, y, width=new_w, height=new_h)
-            c.showPage()
-        c.save()
-        pdf_buffer.seek(0)
+    return domino
 
-        # Bouton PDF avant aperçu
-        st.download_button(
-            label="Télécharger tous les dominos en PDF",
-            data=pdf_buffer,
-            file_name="dominos.pdf",
-            mime="application/pdf"
+
+# =============================================================
+# GÉNÉRATION DES DOMINOS
+# =============================================================
+
+if uploaded_files and len(uploaded_files) >= 2:
+
+    # On conserve l'image ET le nom du fichier
+    images = [
+        (
+            Image.open(f).convert("RGBA"),
+            f.name
+        )
+        for f in uploaded_files
+    ]
+
+    # Mélange aléatoire
+    random.shuffle(images)
+
+    dominos = []
+
+    n = len(images)
+
+    # ---------------------------------------------------------
+    # CRÉATION DES COUPLES
+    # ---------------------------------------------------------
+
+    for i in range(n):
+
+        img1, name1 = images[i]
+
+        # Boucle circulaire :
+        # la dernière image est associée à la première
+        img2, name2 = images[(i + 1) % n]
+
+        dominos.append(
+            (
+                img1,
+                img2,
+                name1,
+                name2
+            )
         )
 
-        st.subheader(f"{len(dominos)} dominos générés")
-        for i, (img1, img2) in enumerate(dominos):
-            domino = create_domino(img1, img2)
-            st.image(domino, caption=f"Domino {i+1}")
-            st.divider()
-    else:
-        st.info("👉 Importez au moins 2 images pour générer des dominos.")
+    # =========================================================
+    # CRÉATION DU PDF
+    # =========================================================
 
-# =========================
-# Onglet 2 : J'ai… qui a ?
-# =========================
-with tab2:
-    st.header("« J’ai… qui a ? » (images)")
+    pdf_buffer = io.BytesIO()
 
-    uploaded_files = st.file_uploader(
-        "Importer les images (PNG / JPG) – l’ordre définit le jeu",
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True,
-        key="jai_files"
+    c = canvas.Canvas(
+        pdf_buffer,
+        pagesize=A4
     )
 
-    if uploaded_files and len(uploaded_files) >= 1:
-        images = [Image.open(f).convert("RGB") for f in uploaded_files]
-        st.success(f"{len(images)} images importées")
+    width, height = A4
 
-        if st.button("📄 Générer et télécharger le PDF"):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                pdf_path = tmp.name
+    for domino_pair in dominos:
 
-            c = canvas.Canvas(pdf_path, pagesize=A4)
-            page_width, page_height = A4
+        img1, img2, name1, name2 = domino_pair
 
-            card_margin = 1.5 * cm
-            card_width = page_width - 2 * card_margin
-            card_height = page_height - 2 * card_margin
-            corner_radius = 25
-            total_cards = len(images) + 1
+        # Création du domino
+        domino_img = create_domino(
+            img1,
+            img2,
+            name1,
+            name2
+        )
 
-            for i in range(total_cards):
-                c.setLineWidth(3)
-                c.roundRect(card_margin, card_margin, card_width, card_height, corner_radius)
-                center_y = page_height / 2
+        # Conversion pour ReportLab
+        img_reader = ImageReader(domino_img)
 
-                if i == 0:
-                    c.setFont("Helvetica-Bold", 35)
-                    c.drawCentredString(page_width / 2, page_height - card_margin - 2 * cm, "J’ai la première carte !")
-                    c.setFont("Helvetica-Bold", 40)
-                    c.drawCentredString(page_width / 2, center_y - 1 * cm, "Qui a ?")
-                    first_img_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    images[0].save(first_img_path)
-                    c.drawImage(first_img_path, card_margin + 2 * cm, card_margin + 2 * cm,
-                                card_width - 4 * cm, card_height / 3, preserveAspectRatio=True)
-                    os.remove(first_img_path)
-                elif i < total_cards - 1:
-                    img_have = images[i - 1]
-                    img_who = images[i]
-                    c.setFont("Helvetica-Bold", 40)
-                    c.drawCentredString(page_width / 2, page_height - card_margin - 1.5 * cm, "J’ai")
-                    have_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    img_have.save(have_path)
-                    c.drawImage(have_path, card_margin + 2 * cm, center_y + 1 * cm,
-                                card_width - 4 * cm, card_height / 3, preserveAspectRatio=True)
-                    c.setFont("Helvetica-Bold", 40)
-                    c.drawCentredString(page_width / 2, center_y - 1 * cm, "Qui a ?")
-                    who_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    img_who.save(who_path)
-                    c.drawImage(who_path, card_margin + 2 * cm, card_margin + 2 * cm,
-                                card_width - 4 * cm, card_height / 3, preserveAspectRatio=True)
-                    os.remove(have_path)
-                    os.remove(who_path)
-                else:
-                    img_last = images[-1]
-                    c.setFont("Helvetica-Bold", 40)
-                    c.drawCentredString(page_width / 2, page_height - card_margin - 1.5 * cm, "J’ai")
-                    last_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    img_last.save(last_path)
-                    c.drawImage(last_path, card_margin + 2 * cm, center_y,
-                                card_width - 4 * cm, card_height / 3, preserveAspectRatio=True)
-                    c.setFont("Helvetica-Bold", 35)
-                    c.drawCentredString(page_width / 2, card_margin + 2.5 * cm, "… c’est la dernière carte !")
-                    os.remove(last_path)
+        img_w, img_h = domino_img.size
 
-                c.showPage()
-            c.save()
+        # Taille du domino dans la page A4
+        scale = min(
+            width / img_w * 0.8,
+            height / img_h * 0.8
+        )
 
-            with open(pdf_path, "rb") as f:
-                st.download_button(
-                    "⬇️ Télécharger le PDF final",
-                    f,
-                    file_name="j_ai_qui_a_cartes_final.pdf",
-                    mime="application/pdf"
-                )
-    else:
-        st.info("👉 Importez au moins 1 image pour générer le jeu.")
+        new_w = img_w * scale
+        new_h = img_h * scale
+
+        # Centrage dans la page
+        x = (width - new_w) / 2
+        y = (height - new_h) / 2
+
+        c.drawImage(
+            img_reader,
+            x,
+            y,
+            width=new_w,
+            height=new_h
+        )
+
+        # Nouvelle page
+        c.showPage()
+
+    # Finalisation du PDF
+    c.save()
+
+    pdf_buffer.seek(0)
+
+    # =========================================================
+    # BOUTON DE TÉLÉCHARGEMENT DU PDF
+    # =========================================================
+
+    st.download_button(
+        label="Télécharger tous les dominos en PDF",
+        data=pdf_buffer,
+        file_name="dominos.pdf",
+        mime="application/pdf"
+    )
+
+    # =========================================================
+    # APERÇU DES DOMINOS
+    # =========================================================
+
+    st.subheader(
+        f"{len(dominos)} dominos générés"
+    )
+
+    for i, (img1, img2, name1, name2) in enumerate(dominos):
+
+        domino = create_domino(
+            img1,
+            img2,
+            name1,
+            name2
+        )
+
+        st.image(
+            domino,
+            caption=f"Domino {i + 1}"
+        )
+
+        st.divider()
